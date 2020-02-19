@@ -44,11 +44,120 @@ then
     echo "    DAV svn"
     echo "    SVNParentPath /var/lib/subversion/repos/"
     echo "    SVNListParentPath on"
-    echo "    AuthType Basic"
     echo "    AuthName \"Subversion Repository\""
-    echo "    AuthUserFile /var/lib/subversion/etc/dav_svn.passwd"
-    echo "    Require valid-user"
     echo "    AuthzSVNAccessFile /var/lib/subversion/etc/dav_svn.authz"
+    echo ""
+  } > /etc/httpd/conf.d/subversion.conf
+
+  case "${AUTH_TYPE}" in
+  "ldap")
+    {
+      echo "<IfModule mod_authnz_ldap.c>"
+      echo "    # Distinguished Name (DN) of the user that mod_authz_ldap should"
+      echo "    # bind to the LDAP server as when searching for the domain user"
+      echo "    # provided by the web client (Active Directory does not allow"
+      echo "    # anonymous binds).  Note, the cn attribute corresponds to the"
+      echo "    # \"Display Name\" field of a user's account in the Active Directory"
+      echo "    # Users and Computers tool, not their login username:"
+      echo "    AuthLDAPBindDN \"${AUTH_LDAP_BIND_DN}\""
+      echo ""
+      echo "    # the BindDN user's password:"
+      echo "    AuthLDAPBindPassword \"${AUTH_LDAP_BIND_PASSWORD}\""
+      echo ""
+      echo "    AuthLDAPURL \"${AUTH_LDAP_URL}\" NONE"
+      echo "</IfModule>"
+      echo ""
+      echo "    AuthType Basic"
+      echo "    AuthBasicProvider file ldap"
+      echo "    AuthBasicAuthoritative off"
+      echo "    AuthUserFile /var/lib/subversion/etc/dav_svn.passwd"
+      echo ""
+    } >> /etc/httpd/conf.d/subversion.conf
+    ;;
+  "kerberos")
+    AUTH_KERB_REALM_L=$( echo ${AUTH_KERB_REALM} | tr '[A-Z]' '[a-z]' )
+    AUTH_KERB_REALM_U=$( echo ${AUTH_KERB_REALM} | tr '[a-z]' '[A-Z]' )
+    {
+      echo "<IfModule mod_auth_kerb.c>"
+      echo "    AuthType Kerberos"
+#      echo "    AuthType Basic"
+      echo "    KrbMethodNegotiate off"
+      echo "    #KrbMethodK5Passwd off"
+      echo "    KrbAuthoritative off"
+      echo "    #KrbAuthRealms ${AUTH_KERB_REALM_U}"
+      echo "    KrbVerifyKDC off"
+      echo "    #KrbServiceName HTTP/${HOSTNAME}@${AUTH_KERB_REALM_U}"
+      echo "    #Krb5Keytab auth_kerb.keytab ;in the same format of KrbServiceName"
+      echo "    #KrbSaveCredentials on"
+      echo "    KrbLocalUserMapping on"
+      echo "    KrbDelegateBasic on"
+      echo "    AuthUserFile /var/lib/subversion/etc/dav_svn.passwd"
+      echo "</IfModule>"
+      echo ""
+#      echo "    AuthType Basic"
+#      echo "    AuthBasicProvider file"
+#      echo "    AuthBasicAuthoritative off"
+#      echo "    AuthUserFile /var/lib/subversion/etc/dav_svn.passwd"
+      echo ""
+    } >> /etc/httpd/conf.d/subversion.conf
+
+    {
+      echo "# Configuration snippets may be placed in this directory as well"
+      echo "includedir /etc/krb5.conf.d/"
+      echo "[libdefaults]"
+      echo " dns_lookup_realm = false"
+      echo "# ticket_lifetime = 24h"
+      echo "# renew_lifetime = 7d"
+      echo "# forwardable = true"
+      echo "# rdns = false"
+      echo "# pkinit_anchors = /etc/pki/tls/certs/ca-bundle.crt"
+      echo "# default_realm = EXAMPLE.COM"
+      echo "# default_ccache_name = KEYRING:persistent:%{uid}"
+      echo " default_realm = ${AUTH_KERB_REALM_U}"
+#      echo " default_keytab_name = /etc/krb5.keytab"
+      echo " default_tgs_enctypes = rc4-hmac"
+      echo " default_tkt_enctypes = rc4-hmac"
+      echo ""
+      echo "[realms]"
+      echo "# EXAMPLE.COM = {"
+      echo "#  kdc = kerberos.example.com"
+      echo "#  admin_server = kerberos.example.com"
+      echo "# }"
+      echo ""
+      echo "[domain_realm]"
+      echo "# .example.com = EXAMPLE.COM"
+      echo "# example.com = EXAMPLE.COM"
+    } > /etc/krb5.conf
+
+    {
+      echo "[realms]"
+      echo " ${AUTH_KERB_REALM_U} = {"
+      echo "  kdc = ${AUTH_KERB_KDC}"
+      echo "  default_domain = ${AUTH_KERB_REALM_U}"
+      echo " }"
+      echo ""
+      echo "[domain_realm]"
+      echo " .${AUTH_KERB_REALM_L} = ${AUTH_KERB_REALM_U}"
+      echo " ${AUTH_KERB_REALM_L} = ${AUTH_KERB_REALM_U}"
+    } > /etc/krb5.conf.d/realm
+
+#    {
+#      echo "HTTP/${HOSTNAME}.${AUTH_KERB_REALM_L}@${AUTH_KERB_REALM_U}"
+#    } > /etc/krb5.keytab
+    ;;
+  *)
+    {
+      echo "    AuthType Basic"
+      echo "    AuthBasicProvider file"
+      echo "    AuthUserFile /var/lib/subversion/etc/dav_svn.passwd"
+      echo ""
+    } >> /etc/httpd/conf.d/subversion.conf
+    ;;
+  esac
+
+  {
+    echo "    RequestHeader set REMOTE_USER %{REMOTE_USER}s"
+    echo "    Require valid-user"
     echo "    SSLRequireSSL"
     echo "</Location>"
     echo ""
