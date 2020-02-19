@@ -162,7 +162,7 @@ then
     echo "</Location>"
     echo ""
     echo "RedirectMatch ^(/svn)\$ \$1/"
-  } > /etc/httpd/conf.d/subversion.conf
+  } >> /etc/httpd/conf.d/subversion.conf
 fi
 
 sed -e 's!^#ServerName .*!ServerName '`tail -1 /etc/hosts | awk '{ print $1 }'`':80!' -i /etc/httpd/conf/httpd.conf
