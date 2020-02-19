@@ -1,6 +1,10 @@
-FROM centos:latest
+FROM centos:7
 
-RUN { \
+RUN set -xe; \
+    mv /etc/localtime /etc/localtime.UTC \
+ && echo 'Asia/Shanghai' > /etc/timezone \
+ && ln -sf ../usr/share/zoneinfo/Asia/Shanghai /etc/localtime; \
+    { \
       echo '[WandiscoSVN]'; \
       echo 'name=Wandisco SVN Repo'; \
       echo 'baseurl=http://opensource.wandisco.com/centos/7/svn-1.8/RPMS/$basearch/'; \
@@ -16,6 +20,8 @@ RUN { \
         httpd \
         mod_dav_svn \
         mod_ssl \
+        mod_auth_kerb \
+        mod_ldap \
  && yum clean all -y \
  && rm -rf /var/cache/yum; \
     { \
