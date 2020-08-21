@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+{
+  echo "ServerTokens Prod"
+} > /etc/httpd/conf.d/httpd-default.conf
+
 if [ ! -d /var/lib/subversion/repos ]
 then
   mkdir -p /var/lib/subversion/repos /var/lib/subversion/etc
