@@ -1,8 +1,23 @@
 #!/usr/bin/env bash
 
+set -e
+
 {
   echo "ServerTokens Prod"
 } > /etc/httpd/conf.d/httpd-default.conf
+
+if [ ! -d /etc/httpd/ssl ]
+then
+  mkdir -p /etc/httpd/ssl
+fi
+
+if [ ! -f /etc/httpd/ssl/server.key -o ! -f /etc/httpd/ssl/server.crt ]
+then
+  #rm -rf /etc/httpd/ssl/*
+  /usr/bin/openssl req -x509 -nodes -days 730 -subj "/C=CN/ST=Jiangsu/L=Suchow/CN=`tail -1 /etc/hosts | awk '{ print $1 }'`" -newkey rsa:4096 -keyout /etc/httpd/ssl/server.key -out /etc/httpd/ssl/server.crt
+  chmod 600 /etc/httpd/ssl/server.key
+fi
+sed -e 's!^SSLCertificateFile .*!SSLCertificateFile /etc/httpd/ssl/server.crt!' -e 's!^SSLCertificateKeyFile .*!SSLCertificateKeyFile /etc/httpd/ssl/server.key!' -i /etc/httpd/conf.d/ssl.conf
 
 if [ ! -d /var/lib/subversion/repos ]
 then
@@ -34,12 +49,6 @@ then
     } >> /var/lib/subversion/etc/dav_svn.authz
   fi
 fi
-
-[ ! -d /etc/httpd/ssl ] && mkdir -p /etc/httpd/ssl
-rm -rf /etc/httpd/ssl/*
-/usr/bin/openssl req -x509 -nodes -days 730 -subj "/C=CN/ST=Jiangsu/L=Suchow/CN=`tail -1 /etc/hosts | awk '{ print $1 }'`" -newkey rsa:4096 -keyout /etc/httpd/ssl/server.key -out /etc/httpd/ssl/server.crt
-chmod 600 /etc/httpd/ssl/server.key
-sed -e 's!^SSLCertificateFile .*!SSLCertificateFile /etc/httpd/ssl/server.crt!' -e 's!^SSLCertificateKeyFile .*!SSLCertificateKeyFile /etc/httpd/ssl/server.key!' -i /etc/httpd/conf.d/ssl.conf
 
 if [ ! -f /etc/httpd/conf.d/subversion.conf ]
 then
