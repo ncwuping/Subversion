@@ -12,16 +12,17 @@ RUN set -xe; \
       echo 'gpgcheck=1'; \
       echo 'gpgkey=http://opensource.wandisco.com/RPM-GPG-KEY-WANdisco'; \
     } > /etc/yum.repos.d/wandisco-svn.repo \
- && yum clean all -y \
  && yum makecache fast \
- && yum update -y \
  && yum install -y \
+        epel-release \
         subversion \
-        httpd \
+        https://dl.iuscommunity.org/pub/ius/stable/CentOS/7/x86_64/ius-release-1.0-15.ius.centos7.noarch.rpm \
+ && yum install -y \
+        httpd24u-2.4.37 \
+        httpd24u-mod_ssl-2.4.37  \
+        httpd24u-mod_ldap-2.4.37 \
         mod_dav_svn \
-        mod_ssl \
         mod_auth_kerb \
-        mod_ldap \
  && yum clean all -y \
  && rm -rf /var/cache/yum; \
     sed -E 's/^\s*(SSLProtocol\s.*)/\1 -TLSv1 -TLSv1.1/' -i /etc/httpd/conf.d/ssl.conf \
