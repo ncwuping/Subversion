@@ -11,6 +11,12 @@ then
   mkdir -p /etc/httpd/ssl
 fi
 
+openssl dhparam -out /etc/httpd/ssl/dhparams.pem 2048
+{
+  echo ''
+  echo 'SSLOpenSSLConfCmd DHParameters "/etc/httpd/ssl/dhparams.pem"'
+} >> /etc/httpd/conf.d/ssl.conf
+
 if [ ! -f /etc/httpd/ssl/server.key -o ! -f /etc/httpd/ssl/server.crt ]
 then
   #rm -rf /etc/httpd/ssl/*
