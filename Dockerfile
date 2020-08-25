@@ -25,7 +25,7 @@ RUN set -xe; \
  && yum clean all -y \
  && rm -rf /var/cache/yum; \
     sed -E 's/^\s*(SSLProtocol\s.*)/\1 -TLSv1 -TLSv1.1/' -i /etc/httpd/conf.d/ssl.conf \
- && sed -E 's/^\s*(SSLCipherSuite HIGH:).*/\1!aNULL:!MD5:!128:!SHA:+SHA256:+SHA384:!CBC/' -i /etc/httpd/conf.d/ssl.conf \
+ && sed -E 's/^\s*(SSLCipherSuite HIGH:).*/\1!aNULL:!MD5:!SHA:+SHA256:+SHA384/' -i /etc/httpd/conf.d/ssl.conf \
  && { \
       echo 'LoadModule dav_svn_module     modules/mod_dav_svn.so'; \
       echo 'LoadModule authz_svn_module   modules/mod_authz_svn.so'; \
