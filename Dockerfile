@@ -24,7 +24,9 @@ RUN set -xe; \
         mod_ldap \
  && yum clean all -y \
  && rm -rf /var/cache/yum; \
-    { \
+    sed -E 's!^\s*(SSLProtocol\s.*)!\1 -TLSv1 -TLSv1.1!' -i /etc/httpd/conf.d/ssl.conf \
+ && sed -E 's!^\s*(SSLCipherSuite HIGH):.*!\1!' -i /etc/httpd/conf.d/ssl.conf \
+ && { \
       echo 'LoadModule dav_svn_module     modules/mod_dav_svn.so'; \
       echo 'LoadModule authz_svn_module   modules/mod_authz_svn.so'; \
       echo 'LoadModule dontdothat_module  modules/mod_dontdothat.so'; \
