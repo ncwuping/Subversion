@@ -17,6 +17,8 @@ RUN set -xe; \
         epel-release \
         subversion \
         https://dl.iuscommunity.org/pub/ius/stable/CentOS/7/x86_64/ius-release-1.0-15.ius.centos7.noarch.rpm \
+ && sed -E 's!^\s*#+\s*(baseurl=https:\/\/.*)!\1!' -i /etc/yum.repos.d/ius.repo \
+ && sed -E 's!^\s*(mirrorlist=https:\/\/.*)!#\1!' -i /etc/yum.repos.d/ius.repo \
  && yum install -y \
         httpd24u-2.4.37 \
         httpd24u-mod_ssl-2.4.37  \
