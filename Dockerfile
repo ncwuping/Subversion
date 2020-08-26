@@ -20,8 +20,9 @@ RUN set -xe; \
         epel-release \
         subversion \
         ${IUS_REPO_URL} \
- && sed -E 's!^\s*#+\s*(baseurl=https:\/\/.*)!\1!' -i.bak /etc/yum.repos.d/ius*.repo \
- && sed -E 's!^\s*(mirrorlist=https:\/\/.*)!#\1!' -i /etc/yum.repos.d/ius*.repo \
+ && sed -e 's!^\s*#\+\s*baseurl=https:\/\/!baseurl=https:\/\/!' \
+        -e 's!^\s*mirrorlist=https:\/\/!#mirrorlist=https:\/\/!' \
+        -i.bak /etc/yum.repos.d/ius*.repo \
  && yum install -y \
         httpd24u-${HTTPD_VERSION} \
         httpd24u-mod_ssl-${HTTPD_VERSION}  \
