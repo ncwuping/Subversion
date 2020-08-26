@@ -23,7 +23,9 @@ then
   /usr/bin/openssl req -x509 -nodes -days 730 -subj "/C=CN/ST=Jiangsu/L=Suchow/CN=`tail -1 /etc/hosts | awk '{ print $1 }'`" -newkey rsa:4096 -keyout /etc/httpd/ssl/server.key -out /etc/httpd/ssl/server.crt
   chmod 600 /etc/httpd/ssl/server.key
 fi
-sed -e 's!^SSLCertificateFile .*!SSLCertificateFile /etc/httpd/ssl/server.crt!' -e 's!^SSLCertificateKeyFile .*!SSLCertificateKeyFile /etc/httpd/ssl/server.key!' -i /etc/httpd/conf.d/ssl.conf
+sed -e 's!^SSLCertificateFile .*!SSLCertificateFile /etc/httpd/ssl/server.crt!' \
+    -e 's!^SSLCertificateKeyFile .*!SSLCertificateKeyFile /etc/httpd/ssl/server.key!' \
+    -i /etc/httpd/conf.d/ssl.conf
 
 if [ ! -d /var/lib/subversion/repos ]
 then
@@ -184,6 +186,8 @@ then
   } >> /etc/httpd/conf.d/subversion.conf
 fi
 
-sed -e 's!^#ServerName .*!ServerName '`tail -1 /etc/hosts | awk '{ print $1 }'`':80!' -i /etc/httpd/conf/httpd.conf
+#sed -e 's!^#ServerName .*!ServerName '`tail -1 /etc/hosts | awk '{ print $1 }'`':80!' -i /etc/httpd/conf/httpd.conf
+sed -e 's!^\s*Listen\s80!#Listen 80!' \
+    -i /etc/httpd/conf/httpd.conf
 
 exec /usr/sbin/httpd -DFOREGROUND
