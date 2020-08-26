@@ -1,5 +1,8 @@
 FROM centos:7
 
+ENV HTTPD_VERSION 2.4.37
+ENV IUS_REPO_URL https://dl.iuscommunity.org/pub/ius/stable/CentOS/7/x86_64/ius-release-1.0-15.ius.centos7.noarch.rpm
+
 RUN set -xe; \
     mv /etc/localtime /etc/localtime.UTC \
  && echo 'Asia/Shanghai' > /etc/timezone \
@@ -16,19 +19,19 @@ RUN set -xe; \
  && yum install -y \
         epel-release \
         subversion \
-        https://dl.iuscommunity.org/pub/ius/stable/CentOS/7/x86_64/ius-release-1.0-15.ius.centos7.noarch.rpm \
+        ${IUS_REPO_URL} \
  && sed -E 's!^\s*#+\s*(baseurl=https:\/\/.*)!\1!' -i /etc/yum.repos.d/ius.repo \
  && sed -E 's!^\s*(mirrorlist=https:\/\/.*)!#\1!' -i /etc/yum.repos.d/ius.repo \
  && yum install -y \
-        httpd24u-2.4.37 \
-        httpd24u-mod_ssl-2.4.37  \
-        httpd24u-mod_ldap-2.4.37 \
+        httpd24u-${HTTPD_VERSION} \
+        httpd24u-mod_ssl-${HTTPD_VERSION}  \
+        httpd24u-mod_ldap-${HTTPD_VERSION} \
         mod_dav_svn \
         mod_auth_kerb \
  && yum clean all -y \
  && rm -rf /var/cache/yum; \
-    sed -E 's/^\s*(SSLProtocol\s.*)/\1 -TLSv1 -TLSv1.1/' -i /etc/httpd/conf.d/ssl.conf \
- && sed -E 's/^\s*(SSLCipherSuite HIGH:).*/\1!aNULL:!MD5:!SHA:+SHA256:+SHA384/' -i /etc/httpd/conf.d/ssl.conf \
+    sed -E 's/^\s*(SSLProtocol\s.*)/\1 -TLSv1 -TLSv1.1/' -i.bak /etc/httpd/conf.d/ssl.conf \
+ && sed -E 's/^\s*(SSLCipherSuite HIGH:).*/\1!aNULL:!MD5:!SHA/' -i /etc/httpd/conf.d/ssl.conf \
  && { \
       echo 'LoadModule dav_svn_module     modules/mod_dav_svn.so'; \
       echo 'LoadModule authz_svn_module   modules/mod_authz_svn.so'; \
