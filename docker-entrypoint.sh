@@ -6,26 +6,29 @@ set -e
   echo "ServerTokens Prod"
 } > /etc/httpd/conf.d/httpd-default.conf
 
-if [ ! -d /etc/httpd/ssl ]
+if [ "${TLS_ENABLED}" = "1"]
 then
-  mkdir -p /etc/httpd/ssl
-fi
+  if [ ! -d /etc/httpd/ssl ]
+  then
+    mkdir -p /etc/httpd/ssl
+  fi
 
-openssl dhparam -out /etc/httpd/ssl/dhparams.pem 2048
-{
-  echo ''
-  echo 'SSLOpenSSLConfCmd DHParameters "/etc/httpd/ssl/dhparams.pem"'
-} >> /etc/httpd/conf.d/ssl.conf
+  openssl dhparam -out /etc/httpd/ssl/dhparams.pem 2048
+  {
+    echo ''
+    echo 'SSLOpenSSLConfCmd DHParameters "/etc/httpd/ssl/dhparams.pem"'
+  } >> /etc/httpd/conf.d/ssl.conf
 
-if [ ! -f /etc/httpd/ssl/server.key -o ! -f /etc/httpd/ssl/server.crt ]
-then
-  #rm -rf /etc/httpd/ssl/*
-  /usr/bin/openssl req -x509 -nodes -days 730 -subj "/C=CN/ST=Jiangsu/L=Suchow/CN=`tail -1 /etc/hosts | awk '{ print $1 }'`" -newkey rsa:4096 -keyout /etc/httpd/ssl/server.key -out /etc/httpd/ssl/server.crt
-  chmod 600 /etc/httpd/ssl/server.key
+  if [ ! -f /etc/httpd/ssl/server.key -o ! -f /etc/httpd/ssl/server.crt ]
+  then
+    #rm -rf /etc/httpd/ssl/*
+    /usr/bin/openssl req -x509 -nodes -days 730 -subj "/C=CN/ST=Jiangsu/L=Suchow/CN=`tail -1 /etc/hosts | awk '{ print $1 }'`" -newkey rsa:4096 -keyout /etc/httpd/ssl/server.key -out /etc/httpd/ssl/server.crt
+    chmod 600 /etc/httpd/ssl/server.key
+  fi
+  sed -e 's!^SSLCertificateFile .*!SSLCertificateFile /etc/httpd/ssl/server.crt!' \
+      -e 's!^SSLCertificateKeyFile .*!SSLCertificateKeyFile /etc/httpd/ssl/server.key!' \
+      -i /etc/httpd/conf.d/ssl.conf
 fi
-sed -e 's!^SSLCertificateFile .*!SSLCertificateFile /etc/httpd/ssl/server.crt!' \
-    -e 's!^SSLCertificateKeyFile .*!SSLCertificateKeyFile /etc/httpd/ssl/server.key!' \
-    -i /etc/httpd/conf.d/ssl.conf
 
 if [ ! -d /var/lib/subversion/repos ]
 then
@@ -179,15 +182,27 @@ then
   {
     echo "    RequestHeader set REMOTE_USER %{REMOTE_USER}s"
     echo "    Require valid-user"
-    echo "    SSLRequireSSL"
+  } >> /etc/httpd/conf.d/subversion.conf
+  
+  if [ "${TLS_ENABLED}" = "1"]
+  then  
+    echo "    SSLRequireSSL" >> /etc/httpd/conf.d/subversion.conf
+  fi
+
+  {
     echo "</Location>"
     echo ""
     echo "RedirectMatch ^(/svn)\$ \$1/"
   } >> /etc/httpd/conf.d/subversion.conf
 fi
 
-#sed -e 's!^#ServerName .*!ServerName '`tail -1 /etc/hosts | awk '{ print $1 }'`':80!' -i /etc/httpd/conf/httpd.conf
-sed -e 's!^\s*Listen\s80!#Listen 80!' \
-    -i /etc/httpd/conf/httpd.conf
+if [ "${TLS_ENABLED}" = "1"]
+then
+  sed -e 's!^\s*Listen\s80!#Listen 80!' \
+      -i /etc/httpd/conf/httpd.conf
+else
+  sed -e 's!^\s*Listen\s443\shttps!#Listen 443 https!' \
+      -i /etc/httpd/conf.d/ssl.conf
+fi
 
 exec /usr/sbin/httpd -DFOREGROUND
