@@ -189,7 +189,7 @@ then
     echo "    Require valid-user"
   } >> /etc/httpd/conf.d/subversion.conf
   
-  if [ "${TLS_ENABLED}" = "1"]
+  if [ "${TLS_ENABLED}" = "1" ]
   then  
     echo "    SSLRequireSSL" >> /etc/httpd/conf.d/subversion.conf
   fi
@@ -201,7 +201,7 @@ then
   } >> /etc/httpd/conf.d/subversion.conf
 fi
 
-if [ "${TLS_ENABLED}" = "1"]
+if [ "${TLS_ENABLED}" = "1" ]
 then
   sed -e 's!^\s*Listen\s80!#Listen 80!' \
       -i /etc/httpd/conf/httpd.conf
