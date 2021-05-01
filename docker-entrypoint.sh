@@ -6,7 +6,7 @@ set -e
   echo "ServerTokens Prod"
 } > /etc/httpd/conf.d/httpd-default.conf
 
-if [ "${TLS_ENABLED}" = "1"]
+if [ "${TLS_ENABLED}" = "1" ]
 then
   if [ ! -d /etc/httpd/ssl ]
   then
