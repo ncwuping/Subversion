@@ -2,6 +2,11 @@
 
 set -e
 
+if [ ! -d "/var/log/httpd" ]
+then
+  mkdir -p /var/log/httpd
+fi
+
 {
   echo "ServerTokens Prod"
 } > /etc/httpd/conf.d/httpd-default.conf
