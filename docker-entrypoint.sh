@@ -197,7 +197,15 @@ then
   {
     echo "</Location>"
     echo ""
-    echo "RedirectMatch ^(/svn)\$ \$1/"
+    echo "RewriteEngine On"
+    echo ""
+    echo "RewriteCond %{REQUEST_URI} ^(/svn)\$"
+    echo "RewriteCond %{HTTP:X-Forwarded-Proto} https"
+    echo "RewriteRule ^(/svn)\$ %{HTTP:X-Forwarded-Proto}://%{HTTP_HOST}\$1/ [L,R=301]"
+    echo ""
+    echo "RewriteCond %{REQUEST_URI} ^(/svn)\$"
+    echo "RewriteCond %{HTTP:X-Forwarded-Proto} !https"
+    echo "RewriteRule ^(/svn)\$ \$1/ [L,R=301]"
   } >> /etc/httpd/conf.d/subversion.conf
 fi
 
